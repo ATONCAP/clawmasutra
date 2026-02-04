@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "if [ -d dist ]; then serve dist -s -l ${PORT:-5173}; else vite; fi",
+    "dev:local": "vite",
     "build": "tsc && vite build",
     "start": "serve dist -s -l $PORT",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
