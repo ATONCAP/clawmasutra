@@ -1,57 +1,66 @@
+/**
+ * Position Tools
+ *
+ * MCP tools for invoking and managing Clawmasutra collaboration positions.
+ */
+
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "fs";
 import * as path from "path";
+import {
+  getOrchestrator,
+  hasOrchestrator,
+  Position,
+  SessionConfig,
+  Category,
+} from "../orchestrator/index.js";
 
 type ToolResult = { content: Array<{ type: string; text: string }>; isError?: boolean };
-type Category = "solo" | "duet" | "group" | "crypto" | "healing";
 
-interface Position { path: string; description: string; agents: number; category: Category; }
-
+// Position definitions
 const POSITIONS: Record<string, Position> = {
   // Solo
-  contemplator: { path: "positions/solo/contemplator", description: "Single agent deep-diving into blockchain data", agents: 1, category: "solo" },
-  wanderer: { path: "positions/solo/wanderer", description: "Exploratory agent scanning for opportunities", agents: 1, category: "solo" },
+  contemplator: { name: "contemplator", path: "positions/solo/contemplator", description: "Single agent deep-diving into blockchain data", agents: 1, category: "solo" },
+  wanderer: { name: "wanderer", path: "positions/solo/wanderer", description: "Exploratory agent scanning for opportunities", agents: 1, category: "solo" },
   // Duet
-  mirror: { path: "positions/duet/mirror", description: "Two agents auditing each other's transactions", agents: 2, category: "duet" },
-  relay: { path: "positions/duet/relay", description: "Sequential handoff (research → execute → verify)", agents: 2, category: "duet" },
-  dance: { path: "positions/duet/dance", description: "Alternating negotiation between agents", agents: 2, category: "duet" },
-  embrace: { path: "positions/duet/embrace", description: "Two agents sharing a wallet, coordinating moves", agents: 2, category: "duet" },
+  mirror: { name: "mirror", path: "positions/duet/mirror", description: "Two agents auditing each other's transactions", agents: 2, category: "duet" },
+  relay: { name: "relay", path: "positions/duet/relay", description: "Sequential handoff (research → execute → verify)", agents: 2, category: "duet" },
+  dance: { name: "dance", path: "positions/duet/dance", description: "Alternating negotiation between agents", agents: 2, category: "duet" },
+  embrace: { name: "embrace", path: "positions/duet/embrace", description: "Two agents sharing a wallet, coordinating moves", agents: 2, category: "duet" },
   // Group
-  circle: { path: "positions/group/circle", description: "Round-robin consensus on strategy", agents: 3, category: "group" },
-  pyramid: { path: "positions/group/pyramid", description: "Oracle at top, workers executing below", agents: 4, category: "group" },
-  swarm: { path: "positions/group/swarm", description: "Parallel agents scanning multiple protocols", agents: 5, category: "group" },
-  tantric: { path: "positions/group/tantric", description: "Slow, deliberate multi-agent consensus (no rushing)", agents: 3, category: "group" },
+  circle: { name: "circle", path: "positions/group/circle", description: "Round-robin consensus on strategy", agents: 3, category: "group" },
+  pyramid: { name: "pyramid", path: "positions/group/pyramid", description: "Oracle at top, workers executing below", agents: 4, category: "group" },
+  swarm: { name: "swarm", path: "positions/group/swarm", description: "Parallel agents scanning multiple protocols", agents: 5, category: "group" },
+  tantric: { name: "tantric", path: "positions/group/tantric", description: "Slow, deliberate multi-agent consensus (no rushing)", agents: 3, category: "group" },
   // Crypto
-  arbitrageur: { path: "crypto/arbitrageur", description: "Agents spotting and executing arb opportunities", agents: 2, category: "crypto" },
-  "oracle-choir": { path: "crypto/oracle-choir", description: "Multiple agents providing price feeds", agents: 3, category: "crypto" },
-  "liquidity-lotus": { path: "crypto/liquidity-lotus", description: "Coordinated LP management across pools", agents: 2, category: "crypto" },
-  "dao-dance": { path: "crypto/dao-dance", description: "Coordinated DAO governance participation", agents: 3, category: "crypto" },
+  arbitrageur: { name: "arbitrageur", path: "crypto/arbitrageur", description: "Agents spotting and executing arb opportunities", agents: 2, category: "crypto" },
+  "oracle-choir": { name: "oracle-choir", path: "crypto/oracle-choir", description: "Multiple agents providing price feeds", agents: 3, category: "crypto" },
+  "liquidity-lotus": { name: "liquidity-lotus", path: "crypto/liquidity-lotus", description: "Coordinated LP management across pools", agents: 2, category: "crypto" },
+  "dao-dance": { name: "dao-dance", path: "crypto/dao-dance", description: "Coordinated DAO governance participation", agents: 3, category: "crypto" },
   // Healing
-  "pattern-doctor": { path: "healing/pattern-doctor", description: "Diagnose broken agent collaboration patterns", agents: 1, category: "healing" },
-  recovery: { path: "healing/recovery", description: "Graceful failure handling and recovery", agents: 1, category: "healing" },
+  "pattern-doctor": { name: "pattern-doctor", path: "healing/pattern-doctor", description: "Diagnose broken agent collaboration patterns", agents: 1, category: "healing" },
+  recovery: { name: "recovery", path: "healing/recovery", description: "Graceful failure handling and recovery", agents: 1, category: "healing" },
 };
 
-// Default skills path: look in parent directory (clawmasutra/skills from mcp-server)
-// Override with CLAWMASUTRA_SKILLS_PATH env var for custom locations
+// Environment
 const DEFAULT_SKILLS_PATH = path.resolve(process.cwd(), "..", "skills");
 const SKILLS_PATH = process.env.CLAWMASUTRA_SKILLS_PATH || DEFAULT_SKILLS_PATH;
-const OPENCLAW_AVAILABLE = !!process.env.OPENCLAW_PATH && fs.existsSync(process.env.OPENCLAW_PATH);
+const ORCHESTRATOR_AVAILABLE = !!process.env.ANTHROPIC_API_KEY;
 
-interface SessionState {
+// Legacy demo session tracking (for backwards compatibility)
+interface LegacySessionState {
   position: string;
   startedAt: Date;
   agents: string[];
   status: "initializing" | "running" | "completed" | "error";
-  processIds: number[];  // PIDs for any spawned processes (future use)
   isDemoMode: boolean;
-  config: Record<string, unknown>;
+  config: SessionConfig;
 }
+const legacySessions = new Map<string, LegacySessionState>();
 
-const activeSessions = new Map<string, SessionState>();
-
+// Helpers
 const ok = (data: object): ToolResult => ({ content: [{ type: "text", text: JSON.stringify(data, null, 2) }] });
 const err = (msg: string): ToolResult => ({ content: [{ type: "text", text: msg }], isError: true });
-
 const getSkillPath = (posPath: string) => path.join(SKILLS_PATH, posPath, "SKILL.md");
 const skillExists = (posPath: string) => fs.existsSync(getSkillPath(posPath));
 
@@ -72,7 +81,7 @@ export const positionTools: Tool[] = [
   },
   {
     name: "position_invoke",
-    description: "Start a Clawmasutra position - launches the agent collaboration pattern. CURRENT STATUS: Demo mode only. Real agent execution via OpenClaw is NOT YET IMPLEMENTED. This tool will simulate responses for UI testing.",
+    description: "Start a Clawmasutra position - launches real AI agent collaboration when ANTHROPIC_API_KEY is set, otherwise runs in demo mode.",
     inputSchema: {
       type: "object",
       properties: {
@@ -97,11 +106,19 @@ export const positionTools: Tool[] = [
               type: "number",
               description: "How long to run (in seconds, 0 for indefinite)",
             },
+            allowTransactions: {
+              type: "boolean",
+              description: "Allow agents to execute blockchain transactions (default: false)",
+            },
+            maxTokensPerAgent: {
+              type: "number",
+              description: "Maximum tokens per agent (default: 50000)",
+            },
           },
         },
         demoMode: {
           type: "boolean",
-          description: "Force demo mode even if OpenClaw is available (for testing UI)",
+          description: "Force demo mode even if orchestrator is available (for testing)",
         },
       },
       required: ["position"],
@@ -137,7 +154,7 @@ export const positionTools: Tool[] = [
   },
   {
     name: "position_describe",
-    description: "Get detailed information about a specific position",
+    description: "Get detailed information about a specific position including its SKILL.md content",
     inputSchema: {
       type: "object",
       properties: {
@@ -150,12 +167,6 @@ export const positionTools: Tool[] = [
     },
   },
 ];
-
-const openClawReason = () => {
-  if (!process.env.OPENCLAW_PATH) return "OPENCLAW_PATH environment variable not set";
-  if (!fs.existsSync(process.env.OPENCLAW_PATH)) return `OPENCLAW_PATH (${process.env.OPENCLAW_PATH}) does not exist`;
-  return undefined;
-};
 
 export async function handlePositionTool(
   name: string,
@@ -178,8 +189,10 @@ export async function handlePositionTool(
         count: positions.length,
         positions,
         environment: {
-          openClawAvailable: OPENCLAW_AVAILABLE,
-          openClawReason: openClawReason(),
+          orchestratorAvailable: ORCHESTRATOR_AVAILABLE,
+          orchestratorReason: ORCHESTRATOR_AVAILABLE
+            ? "ANTHROPIC_API_KEY is set - real agent execution available"
+            : "Set ANTHROPIC_API_KEY to enable real agent execution",
           skillsPath: SKILLS_PATH,
         },
       });
@@ -187,117 +200,191 @@ export async function handlePositionTool(
 
     case "position_invoke": {
       const positionName = args?.position as string;
-      const config = (args?.config as Record<string, unknown>) || {};
+      const config = (args?.config as SessionConfig) || {};
       const forceDemoMode = (args?.demoMode as boolean) || false;
       const position = POSITIONS[positionName];
 
-      if (!position) return err(`Unknown position: ${positionName}. Use position_list to see available positions.`);
+      if (!position) {
+        return err(`Unknown position: ${positionName}. Use position_list to see available positions.`);
+      }
 
-      const sessionId = `${positionName}-${Date.now()}`;
-      const runInDemoMode = forceDemoMode || !OPENCLAW_AVAILABLE;
       const skillPath = getSkillPath(position.path);
-
       if (!skillExists(position.path)) {
         console.warn(`Warning: Skill file not found at ${skillPath}`);
       }
 
-      const session: SessionState = {
-        position: positionName,
-        startedAt: new Date(),
-        agents: [],
-        status: "initializing",
-        processIds: [],
-        isDemoMode: runInDemoMode,
-        config,
-      };
-      activeSessions.set(sessionId, session);
+      // Determine if we should use real orchestration
+      const useRealOrchestration = ORCHESTRATOR_AVAILABLE && hasOrchestrator() && !forceDemoMode;
 
-      if (runInDemoMode) {
-        session.status = "running";
-        session.agents = Array.from({ length: position.agents }, (_, i) => `demo-agent-${i + 1}`);
+      if (useRealOrchestration) {
+        // Real orchestration with Claude agents
+        const orchestrator = getOrchestrator();
+
+        const session = await orchestrator.createSession(position, config);
 
         return ok({
-          sessionId,
+          sessionId: session.id,
           position: positionName,
+          title: session.skill.title,
           description: position.description,
-          agents: session.agents,
           status: session.status,
+          mode: "REAL",
+          agents: Array.from(session.agents.values()).map((a) => ({
+            id: a.id,
+            role: a.role.name,
+            personality: a.role.personality,
+            status: a.status,
+          })),
           config,
           skillPath: position.path,
-          _mode: "DEMO",
-          _warning: "Running in DEMO MODE. No real agents are executing.",
-          _reason: "Real agent execution is not yet implemented",
-          _status: "Real OpenClaw integration is on the roadmap but not yet built",
-          message: `[DEMO] Position '${positionName}' simulated with ${position.agents} demo agent(s). No real work is being performed.`,
+          message: `Position '${positionName}' started with ${position.agents} real Claude agent(s). Agents are now collaborating.`,
+          _note: "Use position_status to monitor progress, or watch the gallery stream for real-time updates.",
         });
       }
 
-      // Real mode - not yet implemented
-      return {
-        ...err("Real OpenClaw integration is not yet implemented"),
-        content: [{ type: "text", text: JSON.stringify({
-          sessionId,
-          position: positionName,
-          status: "NOT_IMPLEMENTED",
-          error: "Real OpenClaw integration is not yet implemented",
-          _todo: ["Start OpenClaw sessions", "Load SKILL.md", "Configure sessions_send", "Set up gallery_emit"],
-          openClawPath: process.env.OPENCLAW_PATH,
-          skillPath,
-          skillExists: skillExists(position.path),
-        }, null, 2) }],
-      };
+      // Demo mode fallback
+      const sessionId = `${positionName}-demo-${Date.now()}`;
+      const demoAgents = Array.from({ length: position.agents }, (_, i) => `demo-agent-${i + 1}`);
+
+      legacySessions.set(sessionId, {
+        position: positionName,
+        startedAt: new Date(),
+        agents: demoAgents,
+        status: "running",
+        isDemoMode: true,
+        config,
+      });
+
+      return ok({
+        sessionId,
+        position: positionName,
+        description: position.description,
+        agents: demoAgents,
+        status: "running",
+        config,
+        skillPath: position.path,
+        mode: "DEMO",
+        _warning: "Running in DEMO MODE. No real agents are executing.",
+        _reason: ORCHESTRATOR_AVAILABLE
+          ? "Demo mode was explicitly requested"
+          : "ANTHROPIC_API_KEY not set - real agent execution requires API key",
+        message: `[DEMO] Position '${positionName}' simulated with ${position.agents} demo agent(s). No real work is being performed.`,
+      });
     }
 
     case "position_status": {
       const sessionId = args?.sessionId as string;
-      const session = activeSessions.get(sessionId);
-      if (!session) return err(`No session found with ID: ${sessionId}`);
 
-      const position = POSITIONS[session.position];
-      const runningFor = Math.floor((Date.now() - session.startedAt.getTime()) / 1000);
+      // Check orchestrator first
+      if (hasOrchestrator()) {
+        const orchestrator = getOrchestrator();
+        const session = orchestrator.getSession(sessionId);
 
-      return ok({
-        sessionId,
-        position: session.position,
-        description: position.description,
-        status: session.status,
-        agents: session.agents,
-        startedAt: session.startedAt.toISOString(),
-        runningFor: `${runningFor}s`,
-        isDemoMode: session.isDemoMode,
-        ...(session.isDemoMode && { _note: "This session is running in DEMO MODE - no real agents are executing" }),
-      });
+        if (session) {
+          const runningFor = Math.floor((Date.now() - session.startedAt.getTime()) / 1000);
+
+          return ok({
+            sessionId,
+            position: session.position.name,
+            title: session.skill.title,
+            status: session.status,
+            mode: "REAL",
+            agents: Array.from(session.agents.values()).map((a) => ({
+              id: a.id,
+              role: a.role.name,
+              status: a.status,
+              turnsCompleted: a.turnsCompleted,
+              tokensUsed: a.tokensUsed,
+            })),
+            startedAt: session.startedAt.toISOString(),
+            completedAt: session.completedAt?.toISOString(),
+            runningFor: `${runningFor}s`,
+            error: session.error,
+          });
+        }
+      }
+
+      // Check legacy sessions
+      const legacy = legacySessions.get(sessionId);
+      if (legacy) {
+        const runningFor = Math.floor((Date.now() - legacy.startedAt.getTime()) / 1000);
+        const position = POSITIONS[legacy.position];
+
+        return ok({
+          sessionId,
+          position: legacy.position,
+          description: position?.description,
+          status: legacy.status,
+          mode: "DEMO",
+          agents: legacy.agents,
+          startedAt: legacy.startedAt.toISOString(),
+          runningFor: `${runningFor}s`,
+          isDemoMode: true,
+          _note: "This session is running in DEMO MODE - no real agents are executing",
+        });
+      }
+
+      return err(`No session found with ID: ${sessionId}`);
     }
 
     case "position_stop": {
       const sessionId = args?.sessionId as string;
-      const session = activeSessions.get(sessionId);
-      if (!session) return err(`No session found with ID: ${sessionId}`);
 
-      // Kill any real processes by PID (future: when OpenClaw integration is added)
-      for (const pid of session.processIds) {
-        try { process.kill(pid); } catch { /* already exited */ }
+      // Check orchestrator first
+      if (hasOrchestrator()) {
+        const orchestrator = getOrchestrator();
+        const session = orchestrator.getSession(sessionId);
+
+        if (session) {
+          await orchestrator.stopSession(sessionId);
+
+          return ok({
+            sessionId,
+            position: session.position.name,
+            status: "stopped",
+            mode: "REAL",
+            ranFor: `${Math.floor((Date.now() - session.startedAt.getTime()) / 1000)}s`,
+            agentStats: Array.from(session.agents.values()).map((a) => ({
+              id: a.id,
+              role: a.role.name,
+              turns: a.turnsCompleted,
+              tokens: a.tokensUsed,
+            })),
+          });
+        }
       }
-      session.status = "completed";
 
-      return ok({
-        sessionId,
-        position: session.position,
-        status: "stopped",
-        ranFor: `${Math.floor((Date.now() - session.startedAt.getTime()) / 1000)}s`,
-        wasDemoMode: session.isDemoMode,
-      });
+      // Check legacy sessions
+      const legacy = legacySessions.get(sessionId);
+      if (legacy) {
+        legacy.status = "completed";
+
+        return ok({
+          sessionId,
+          position: legacy.position,
+          status: "stopped",
+          mode: "DEMO",
+          ranFor: `${Math.floor((Date.now() - legacy.startedAt.getTime()) / 1000)}s`,
+          wasDemoMode: true,
+        });
+      }
+
+      return err(`No session found with ID: ${sessionId}`);
     }
 
     case "position_describe": {
       const positionName = args?.position as string;
       const position = POSITIONS[positionName];
-      if (!position) return err(`Unknown position: ${positionName}. Use position_list to see available positions.`);
+
+      if (!position) {
+        return err(`Unknown position: ${positionName}. Use position_list to see available positions.`);
+      }
 
       const skillPath = getSkillPath(position.path);
-      let details: string | null = null;
+      let skillContent: string | null = null;
+
       if (skillExists(position.path)) {
-        try { details = fs.readFileSync(skillPath, "utf-8"); } catch { /* use fallback */ }
+        skillContent = fs.readFileSync(skillPath, "utf-8");
       }
 
       return ok({
@@ -306,8 +393,11 @@ export async function handlePositionTool(
         agents: position.agents,
         description: position.description,
         skillPath,
-        skillExists: skillExists(position.path),
-        details: details || "See SKILL.md for detailed description.",
+        skillExists: !!skillContent,
+        skill: skillContent || "Skill file not found. See SKILL.md template for documentation.",
+        environment: {
+          orchestratorAvailable: ORCHESTRATOR_AVAILABLE && hasOrchestrator(),
+        },
       });
     }
 
@@ -315,3 +405,6 @@ export async function handlePositionTool(
       return err(`Unknown position tool: ${name}`);
   }
 }
+
+// Export positions for orchestrator use
+export { POSITIONS };
