@@ -3,7 +3,7 @@ import { CHAIN } from "@tonconnect/ui";
 import React from "react";
 import { useTonWallet } from "@tonconnect/ui-react";
 
-const chainNames = {
+const chainNames: Record<string, string> = {
   [CHAIN.MAINNET]: "mainnet",
   [CHAIN.TESTNET]: "testnet",
 };
