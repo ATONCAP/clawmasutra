@@ -17,6 +17,7 @@ import {
   VStack,
   Button,
   useDisclosure,
+  useToast,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -93,10 +94,12 @@ function PositionDetailModal({
   position,
   isOpen,
   onClose,
+  onInvoke,
 }: {
   position: Position | null;
   isOpen: boolean;
   onClose: () => void;
+  onInvoke: (position: Position) => void;
 }) {
   if (!position) return null;
 
@@ -121,8 +124,7 @@ function PositionDetailModal({
             <Button
               colorScheme="purple"
               onClick={() => {
-                // In production, this would invoke the position
-                alert(`Invoking ${position.name}...`);
+                onInvoke(position);
                 onClose();
               }}
             >
@@ -139,10 +141,24 @@ function App() {
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
 
   const handlePositionSelect = (position: Position) => {
     setSelectedPosition(position);
     onOpen();
+  };
+
+  const handlePositionInvoke = (position: Position) => {
+    // Generate a session ID
+    const sessionId = `${position.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+    setActiveSession(sessionId);
+    toast({
+      title: `Starting ${position.name}`,
+      description: `Session ID: ${sessionId}`,
+      status: "info",
+      duration: 5000,
+      isClosable: true,
+    });
   };
 
   return (
@@ -284,6 +300,7 @@ function App() {
         position={selectedPosition}
         isOpen={isOpen}
         onClose={onClose}
+        onInvoke={handlePositionInvoke}
       />
     </ChakraProvider>
   );

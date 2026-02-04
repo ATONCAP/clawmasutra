@@ -42,6 +42,7 @@ function EventCard({ event }: EventCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const codeBgColor = useColorModeValue("gray.50", "gray.900");
   const config = eventTypeConfig[event.type] || eventTypeConfig.system;
 
   const formatTime = (timestamp: string) => {
@@ -108,7 +109,7 @@ function EventCard({ event }: EventCardProps) {
             fontSize="xs"
             p={2}
             borderRadius="md"
-            bg={useColorModeValue("gray.50", "gray.900")}
+            bg={codeBgColor}
           >
             {JSON.stringify(event.data, null, 2)}
           </Code>

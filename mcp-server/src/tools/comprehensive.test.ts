@@ -146,6 +146,63 @@ describe("Gallery Stream Edge Cases", () => {
     assert.ok(!result.isError);
   });
 
+  it("should reject emit without sessionId", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      type: "system",
+      data: {},
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("sessionId is required"));
+  });
+
+  it("should reject emit with empty sessionId", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      sessionId: "",
+      type: "system",
+      data: {},
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("sessionId is required"));
+  });
+
+  it("should reject emit without type", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      sessionId: "test-session",
+      data: {},
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("type is required"));
+  });
+
+  it("should reject emit with invalid type", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      sessionId: "test-session",
+      type: "invalid_type",
+      data: {},
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("type is required"));
+  });
+
+  it("should reject emit without data", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      sessionId: "test-session",
+      type: "system",
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("data is required"));
+  });
+
+  it("should reject emit with null data", async () => {
+    const result = await handleGalleryTool("gallery_emit", {
+      sessionId: "test-session",
+      type: "system",
+      data: null,
+    });
+    assert.ok(result.isError);
+    assert.ok(result.content[0].text.includes("data is required"));
+  });
+
   it("should handle emit with large data payload", async () => {
     const largeData = { items: Array(1000).fill({ key: "value", nested: { a: 1, b: 2 } }) };
     const result = await handleGalleryTool("gallery_emit", {

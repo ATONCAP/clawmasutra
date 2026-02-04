@@ -252,6 +252,25 @@ export async function handleGalleryTool(
         const type = args?.type as GalleryEvent["type"];
         const data = args?.data as Record<string, unknown>;
 
+        if (!sessionId || typeof sessionId !== "string") {
+          return {
+            content: [{ type: "text", text: "sessionId is required and must be a string" }],
+            isError: true,
+          };
+        }
+        if (!type || !["agent_message", "agent_action", "blockchain_tx", "position_update", "system"].includes(type)) {
+          return {
+            content: [{ type: "text", text: "type is required and must be one of: agent_message, agent_action, blockchain_tx, position_update, system" }],
+            isError: true,
+          };
+        }
+        if (data === undefined || data === null || typeof data !== "object") {
+          return {
+            content: [{ type: "text", text: "data is required and must be an object" }],
+            isError: true,
+          };
+        }
+
         const event = addEvent({
           sessionId,
           agentId,
@@ -384,18 +403,18 @@ export async function handleGalleryTool(
 
         if (sessionId) {
           const before = eventStore.length;
-          const toRemove = eventStore.filter((e) => e.sessionId === sessionId);
-          toRemove.forEach((e) => {
-            const idx = eventStore.indexOf(e);
-            if (idx >= 0) eventStore.splice(idx, 1);
-          });
+          // O(n) filter instead of O(n²) indexOf+splice
+          const keepEvents = eventStore.filter((e) => e.sessionId !== sessionId);
+          const cleared = before - keepEvents.length;
+          eventStore.length = 0;
+          eventStore.push(...keepEvents);
 
           return {
             content: [{
               type: "text",
               text: JSON.stringify({
                 success: true,
-                cleared: before - eventStore.length,
+                cleared,
                 remaining: eventStore.length,
                 sessionId,
               }, null, 2),
