@@ -350,8 +350,4 @@ segments:
     pauseAfter: 1000
     actionDescription: "Fade to logo with tagline"
 
-  - id: "outro"
-    startTime: 335000
-    text: ""
-    pauseAfter: 0
-    actionDescription: "End card with GitHub link"
+  # End card - no audio needed, just visual
