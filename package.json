@@ -1,0 +1,38 @@
+{
+  "name": "clawmasutra",
+  "version": "0.1.0",
+  "description": "Agent-to-Agent MCP collaboration with TON blockchain integration",
+  "private": true,
+  "workspaces": [
+    "mcp-server",
+    "dapp"
+  ],
+  "scripts": {
+    "dev": "npm run dev:mcp & npm run dev:dapp",
+    "dev:mcp": "cd mcp-server && npm run dev",
+    "dev:dapp": "cd dapp && npm run dev",
+    "build": "npm run build:mcp && npm run build:dapp",
+    "build:mcp": "cd mcp-server && npm run build",
+    "build:dapp": "cd dapp && npm run build",
+    "test": "cd mcp-server && npm test",
+    "lint": "echo 'No root lint configured'",
+    "clean": "rm -rf mcp-server/dist dapp/dist node_modules"
+  },
+  "keywords": [
+    "mcp",
+    "agents",
+    "ai",
+    "ton",
+    "blockchain",
+    "collaboration"
+  ],
+  "author": "AlphaTON Capital",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ATONCAP/clawmasutra.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

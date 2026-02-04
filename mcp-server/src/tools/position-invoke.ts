@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 type ToolResult = { content: Array<{ type: string; text: string }>; isError?: boolean };
-type Category = "solo" | "duet" | "group" | "crypto";
+type Category = "solo" | "duet" | "group" | "crypto" | "healing";
 
 interface Position { path: string; description: string; agents: number; category: Category; }
 
@@ -25,6 +25,10 @@ const POSITIONS: Record<string, Position> = {
   arbitrageur: { path: "crypto/arbitrageur", description: "Agents spotting and executing arb opportunities", agents: 2, category: "crypto" },
   "oracle-choir": { path: "crypto/oracle-choir", description: "Multiple agents providing price feeds", agents: 3, category: "crypto" },
   "liquidity-lotus": { path: "crypto/liquidity-lotus", description: "Coordinated LP management across pools", agents: 2, category: "crypto" },
+  "dao-dance": { path: "crypto/dao-dance", description: "Coordinated DAO governance participation", agents: 3, category: "crypto" },
+  // Healing
+  "pattern-doctor": { path: "healing/pattern-doctor", description: "Diagnose broken agent collaboration patterns", agents: 1, category: "healing" },
+  recovery: { path: "healing/recovery", description: "Graceful failure handling and recovery", agents: 1, category: "healing" },
 };
 
 // Default skills path: look in parent directory (clawmasutra/skills from mcp-server)
@@ -60,7 +64,7 @@ export const positionTools: Tool[] = [
       properties: {
         category: {
           type: "string",
-          enum: ["solo", "duet", "group", "crypto", "all"],
+          enum: ["solo", "duet", "group", "crypto", "healing", "all"],
           description: "Filter by category (default: all)",
         },
       },

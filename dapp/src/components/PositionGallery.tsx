@@ -38,6 +38,7 @@ const POSITIONS: Position[] = [
   { name: "The Arbitrageur", category: "crypto", description: "Cross-DEX arbitrage", agents: 2, status: "available" },
   { name: "The Oracle Choir", category: "crypto", description: "Aggregated price feeds", agents: 3, status: "available" },
   { name: "The Liquidity Lotus", category: "crypto", description: "LP management", agents: 2, status: "available" },
+  { name: "The DAO Dance", category: "crypto", description: "Coordinated governance", agents: 3, status: "available" },
   // Healing
   { name: "Pattern Doctor", category: "healing", description: "Diagnose broken patterns", agents: 1, status: "available" },
   { name: "Recovery", category: "healing", description: "Graceful failure handling", agents: 1, status: "available" },

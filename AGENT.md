@@ -40,6 +40,7 @@ I am a Clawmasutra-aware agent. I can collaborate with other agents using MCP to
 | arbitrageur | Spotting and executing arb opportunities | Cross-DEX arbitrage, price discrepancy exploitation |
 | oracle-choir | Multiple agents providing price feeds | Decentralized price aggregation, oracle consensus |
 | liquidity-lotus | Coordinated LP management across pools | Multi-pool liquidity provision, rebalancing |
+| dao-dance | Coordinated DAO governance participation | Proposal analysis, voting coordination, governance strategy |
 
 ### Healing Positions (1 agent)
 

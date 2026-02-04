@@ -66,7 +66,14 @@ describe("Position Tool Edge Cases", () => {
     const result = await handlePositionTool("position_list", { category: "crypto" });
     const parsed = JSON.parse(result.content[0].text);
     assert.ok(parsed.positions.every((p: { category: string }) => p.category === "crypto"));
-    assert.strictEqual(parsed.count, 3, "Should have 3 crypto positions");
+    assert.strictEqual(parsed.count, 4, "Should have 4 crypto positions");
+  });
+
+  it("should list healing positions only", async () => {
+    const result = await handlePositionTool("position_list", { category: "healing" });
+    const parsed = JSON.parse(result.content[0].text);
+    assert.ok(parsed.positions.every((p: { category: string }) => p.category === "healing"));
+    assert.strictEqual(parsed.count, 2, "Should have 2 healing positions");
   });
 
   it("should handle position status for nonexistent session", async () => {

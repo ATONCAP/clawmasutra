@@ -42,6 +42,7 @@ A scannable reference card for all agent collaboration positions.
 | **arbitrageur** | `/arbitrageur [--pools]` | 2 | Arbitrage execution. Scout spots spreads, executor captures them. |
 | **oracle-choir** | `/oracle-choir <asset>` | 3 | Price aggregation. Multiple agents provide feeds, consensus determines price. |
 | **liquidity-lotus** | `/liquidity-lotus <pools>` | 2 | LP management. Coordinated liquidity provision across multiple pools. |
+| **dao-dance** | `/dao-dance <dao> [--proposal ID]` | 3 | Governance coordination. Research proposals, form positions, vote in unison. |
 
 ---
 
