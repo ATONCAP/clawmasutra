@@ -113,6 +113,25 @@ cd dapp && yarn dev
 - **Frontend**: React + Chakra UI + Vite
 - **MCP Server**: TypeScript + @modelcontextprotocol/sdk
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [AGENT.md](./AGENT.md) | Agent integration guide - include in SOUL.md or system prompts |
+| [docs/POSITIONS_QUICK_REF.md](./docs/POSITIONS_QUICK_REF.md) | One-page position reference card |
+| [docs/MCP_TOOLS_REF.md](./docs/MCP_TOOLS_REF.md) | Complete MCP tool documentation |
+
+### Claude Code Skill
+
+A `/clawmasutra` skill is available for Claude Code users:
+
+```bash
+# Installed at ~/.claude/skills/clawmasutra/SKILL.md
+/clawmasutra list           # List positions
+/clawmasutra start mirror   # Start a position
+/clawmasutra status         # Check status
+```
+
 ## License
 
 MIT
