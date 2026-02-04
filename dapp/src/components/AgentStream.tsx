@@ -40,9 +40,9 @@ interface EventCardProps {
 
 function EventCard({ event }: EventCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const codeBgColor = useColorModeValue("gray.50", "gray.900");
+  const bgColor = "rgba(30, 15, 25, 0.7)";
+  const borderColor = "rgba(236, 72, 153, 0.2)";
+  const codeBgColor = "rgba(10, 5, 10, 0.8)";
   const config = eventTypeConfig[event.type] || eventTypeConfig.system;
 
   const formatTime = (timestamp: string) => {
@@ -97,7 +97,7 @@ function EventCard({ event }: EventCardProps) {
         </HStack>
       </HStack>
 
-      <Text fontSize="sm" noOfLines={isExpanded ? undefined : 2}>
+      <Text fontSize="sm" color="gray.300" noOfLines={isExpanded ? undefined : 2}>
         {getEventSummary(event)}
       </Text>
 
@@ -125,38 +125,41 @@ interface AgentStreamProps {
   wsUrl?: string;
 }
 
-// Demo events shown when not connected
+// Demo events - clearly marked as simulated data
 const DEMO_EVENTS: GalleryEvent[] = [
   {
     id: "demo-001",
     timestamp: new Date().toISOString(),
     type: "system",
     sessionId: "demo",
-    data: { message: "This is demo data. Connect to MCP server for real events.", _demo: true },
+    data: { message: "[SIMULATED] No MCP server connected. This is sample data showing what events would look like.", _demo: true },
   },
   {
     id: "demo-002",
     timestamp: new Date(Date.now() - 5000).toISOString(),
     type: "position_update",
     sessionId: "demo",
-    data: { status: "demo", position: "The Mirror", agents: ["demo-agent-1", "demo-agent-2"], _demo: true },
+    data: { status: "simulated", position: "The Mirror", agents: ["simulated-agent-1", "simulated-agent-2"], _demo: true },
   },
   {
     id: "demo-003",
     timestamp: new Date(Date.now() - 10000).toISOString(),
     type: "agent_message",
     sessionId: "demo",
-    agentId: "demo-agent-1",
-    data: { message: "Demo: Beginning analysis...", _demo: true },
+    agentId: "simulated-agent-1",
+    data: { message: "[SIMULATED] Beginning analysis...", _demo: true },
   },
 ];
 
 type ConnectionState = "disconnected" | "connecting" | "connected" | "error" | "demo";
 
+// Use environment variable for production WebSocket URL, fallback to localhost
+const DEFAULT_WS_URL = import.meta.env.VITE_GALLERY_WS_URL || "ws://localhost:3001";
+
 export function AgentStream({
   sessionId,
   maxEvents = 100,
-  wsUrl = "ws://localhost:3001",
+  wsUrl = DEFAULT_WS_URL,
 }: AgentStreamProps) {
   const [events, setEvents] = useState<GalleryEvent[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
@@ -246,27 +249,16 @@ export function AgentStream({
     setEvents(DEMO_EVENTS);
   }, [disconnect]);
 
-  // Try to connect on mount
+  // Start in demo mode by default - no deceptive "connecting" spinner
+  // User can click "Connect" to try real server if one is running
   useEffect(() => {
-    connect();
+    // Immediately show demo mode - don't pretend to connect
+    useDemoMode();
 
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
-
-  // Fallback to demo mode after connection failures
-  useEffect(() => {
-    if (connectionState === "error" || connectionState === "disconnected") {
-      const timeout = setTimeout(() => {
-        if (events.length === 0) {
-          useDemoMode();
-        }
-      }, 10000); // Show demo after 10s of no connection
-
-      return () => clearTimeout(timeout);
-    }
-  }, [connectionState, events.length, useDemoMode]);
+  }, [disconnect, useDemoMode]);
 
   // Update session filter if connected
   useEffect(() => {
@@ -285,7 +277,7 @@ export function AgentStream({
     }
   }, [events, isLive]);
 
-  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const streamBgColor = "rgba(20, 10, 15, 0.6)";
   const isDemo = connectionState === "demo";
   const displayEvents = events.length > 0 ? events : (isDemo ? DEMO_EVENTS : []);
 
@@ -293,7 +285,7 @@ export function AgentStream({
     <Box>
       <HStack justify="space-between" mb={4}>
         <HStack>
-          <Text fontWeight="bold">Agent Stream</Text>
+          <Text fontWeight="bold" color="pink.200">Agent Stream</Text>
           {connectionState === "connected" && (
             <Badge colorScheme="green" variant="subtle">
               <HStack spacing={1}>
@@ -350,11 +342,11 @@ export function AgentStream({
       </HStack>
 
       {isDemo && (
-        <Alert status="info" mb={4} borderRadius="md">
-          <AlertIcon />
-          <AlertDescription fontSize="sm">
-            Running in demo mode with sample data. Start the MCP server and WebSocket to see real events.
-            <Code ml={2} fontSize="xs">ws://localhost:3001</Code>
+        <Alert status="warning" mb={4} borderRadius="md" bg="rgba(236, 153, 72, 0.1)" borderColor="orange.500">
+          <AlertIcon color="orange.400" />
+          <AlertDescription fontSize="sm" color="orange.200">
+            Showing simulated data. Real agent execution is not yet implemented.
+            Click "Connect" to try connecting to a local WebSocket server.
           </AlertDescription>
         </Alert>
       )}
@@ -369,9 +361,9 @@ export function AgentStream({
       )}
 
       {sessionId && (
-        <Box mb={4} p={2} bg={bgColor} borderRadius="md">
-          <Text fontSize="sm" color="gray.600">
-            Filtering: <Code>{sessionId}</Code>
+        <Box mb={4} p={2} bg={streamBgColor} borderRadius="md">
+          <Text fontSize="sm" color="gray.400">
+            Filtering: <Code colorScheme="pink">{sessionId}</Code>
           </Text>
         </Box>
       )}
@@ -381,15 +373,17 @@ export function AgentStream({
         maxH="600px"
         overflowY="auto"
         borderRadius="lg"
-        bg={bgColor}
+        bg={streamBgColor}
         p={4}
+        borderWidth="1px"
+        borderColor="rgba(236, 72, 153, 0.2)"
       >
         {displayEvents.length === 0 ? (
-          <VStack py={8} color="gray.500">
-            <Spinner size="lg" />
+          <VStack py={8} color="gray.400">
+            <Spinner size="lg" color="pink.400" />
             <Text>Waiting for events...</Text>
-            <Text fontSize="sm">Make sure the MCP server is running</Text>
-            <Button size="sm" mt={2} onClick={useDemoMode}>
+            <Text fontSize="sm" color="gray.500">Make sure the MCP server is running</Text>
+            <Button size="sm" mt={2} onClick={useDemoMode} colorScheme="pink" variant="outline">
               Use Demo Mode
             </Button>
           </VStack>

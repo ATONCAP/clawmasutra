@@ -72,7 +72,7 @@ export const positionTools: Tool[] = [
   },
   {
     name: "position_invoke",
-    description: "Start a Clawmasutra position - launches the agent collaboration pattern. NOTE: Requires OpenClaw to be installed and configured. Set OPENCLAW_PATH env var. Without it, runs in demo mode with simulated responses.",
+    description: "Start a Clawmasutra position - launches the agent collaboration pattern. CURRENT STATUS: Demo mode only. Real agent execution via OpenClaw is NOT YET IMPLEMENTED. This tool will simulate responses for UI testing.",
     inputSchema: {
       type: "object",
       properties: {
@@ -226,8 +226,8 @@ export async function handlePositionTool(
           skillPath: position.path,
           _mode: "DEMO",
           _warning: "Running in DEMO MODE. No real agents are executing.",
-          _reason: openClawReason() || "Demo mode requested",
-          _toEnable: "Set OPENCLAW_PATH environment variable to your OpenClaw installation path",
+          _reason: "Real agent execution is not yet implemented",
+          _status: "Real OpenClaw integration is on the roadmap but not yet built",
           message: `[DEMO] Position '${positionName}' simulated with ${position.agents} demo agent(s). No real work is being performed.`,
         });
       }

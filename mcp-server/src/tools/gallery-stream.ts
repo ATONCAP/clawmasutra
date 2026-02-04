@@ -69,8 +69,8 @@ function initWebSocketServer(): { started: boolean; port: number; error?: string
               }));
             }
           }
-        } catch {
-          // Ignore invalid messages
+        } catch (error) {
+          console.warn(`Invalid WebSocket message from ${subscriptionId}:`, error instanceof Error ? error.message : String(error));
         }
       });
 
@@ -78,7 +78,8 @@ function initWebSocketServer(): { started: boolean; port: number; error?: string
         clients.delete(subscriptionId);
       });
 
-      ws.on("error", () => {
+      ws.on("error", (error) => {
+        console.warn(`WebSocket client error (${subscriptionId}):`, error.message);
         clients.delete(subscriptionId);
       });
     });
@@ -122,8 +123,9 @@ function broadcastEvent(event: GalleryEvent): number {
           },
         }));
         sentCount++;
-      } catch {
-        // Client disconnected, will be cleaned up
+      } catch (error) {
+        console.warn(`Failed to send to client ${client.subscriptionId}:`, error instanceof Error ? error.message : String(error));
+        // Client likely disconnected, will be cleaned up on next close event
       }
     }
   });

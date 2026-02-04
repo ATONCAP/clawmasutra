@@ -95,8 +95,8 @@ const DEMO_CONTRACTS: ContractInfo[] = [
 ];
 
 function WalletCard({ wallet, isLoading }: { wallet: WalletInfo | null; isLoading?: boolean }) {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const bgColor = "rgba(30, 15, 25, 0.7)";
+  const borderColor = "rgba(236, 72, 153, 0.2)";
 
   const shortenAddress = (addr: string) =>
     `${addr.slice(0, 8)}...${addr.slice(-6)}`;
@@ -131,7 +131,7 @@ function WalletCard({ wallet, isLoading }: { wallet: WalletInfo | null; isLoadin
       p={4}
     >
       <HStack justify="space-between" mb={3}>
-        <Text fontWeight="bold">Wallet</Text>
+        <Text fontWeight="bold" color="pink.100">Wallet</Text>
         <HStack>
           {wallet.isDemo && (
             <Badge colorScheme="purple" variant="subtle">Demo</Badge>
@@ -172,9 +172,9 @@ function WalletCard({ wallet, isLoading }: { wallet: WalletInfo | null; isLoadin
 }
 
 function TransactionList({ transactions, isLoading }: { transactions: Transaction[]; isLoading?: boolean }) {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const itemBg = useColorModeValue("gray.50", "gray.900");
+  const bgColor = "rgba(30, 15, 25, 0.7)";
+  const borderColor = "rgba(236, 72, 153, 0.2)";
+  const itemBg = "rgba(20, 10, 15, 0.8)";
 
   const hasDemo = transactions.some(tx => tx.isDemo);
 
@@ -200,7 +200,7 @@ function TransactionList({ transactions, isLoading }: { transactions: Transactio
       p={4}
     >
       <HStack justify="space-between" mb={3}>
-        <Text fontWeight="bold">Recent Transactions</Text>
+        <Text fontWeight="bold" color="pink.100">Recent Transactions</Text>
         {hasDemo && <Badge colorScheme="purple" variant="subtle">Demo</Badge>}
       </HStack>
 
@@ -224,7 +224,7 @@ function TransactionList({ transactions, isLoading }: { transactions: Transactio
                 >
                   {tx.type === "in" ? "↓ IN" : "↑ OUT"}
                 </Badge>
-                <Text fontSize="sm">{tx.amount}</Text>
+                <Text fontSize="sm" color="gray.200">{tx.amount}</Text>
               </HStack>
               <HStack>
                 <Badge
@@ -252,9 +252,9 @@ function TransactionList({ transactions, isLoading }: { transactions: Transactio
 }
 
 function ContractStatus({ contracts, isLoading }: { contracts: ContractInfo[]; isLoading?: boolean }) {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const itemBg = useColorModeValue("gray.50", "gray.900");
+  const bgColor = "rgba(30, 15, 25, 0.7)";
+  const borderColor = "rgba(236, 72, 153, 0.2)";
+  const itemBg = "rgba(20, 10, 15, 0.8)";
 
   const hasDemo = contracts.some(c => c.isDemo);
 
@@ -282,7 +282,7 @@ function ContractStatus({ contracts, isLoading }: { contracts: ContractInfo[]; i
       p={4}
     >
       <HStack justify="space-between" mb={3}>
-        <Text fontWeight="bold">Monitored Contracts</Text>
+        <Text fontWeight="bold" color="pink.100">Monitored Contracts</Text>
         {hasDemo && <Badge colorScheme="purple" variant="subtle">Demo</Badge>}
       </HStack>
 
@@ -301,7 +301,7 @@ function ContractStatus({ contracts, isLoading }: { contracts: ContractInfo[]; i
             >
               <VStack align="start" spacing={0}>
                 <Code fontSize="xs">{shortenAddress(contract.address)}</Code>
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="gray.400">
                   {contract.type}
                 </Text>
               </VStack>
@@ -325,55 +325,62 @@ function ContractStatus({ contracts, isLoading }: { contracts: ContractInfo[]; i
 }
 
 function NetworkHealth({ isDemo }: { isDemo?: boolean }) {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const bgColor = "rgba(30, 15, 25, 0.7)";
+  const borderColor = "rgba(236, 72, 153, 0.2)";
+
+  // All values are simulated - no actual health checks implemented
+  const statusBadge = isDemo ? (
+    <Badge colorScheme="gray" variant="outline">Simulated</Badge>
+  ) : (
+    <Badge colorScheme="gray">Unknown</Badge>
+  );
 
   return (
     <Box
       bg={bgColor}
       borderWidth="1px"
-      borderColor={isDemo ? "purple.200" : borderColor}
+      borderColor={isDemo ? "orange.600" : borderColor}
       borderRadius="lg"
       p={4}
     >
       <HStack justify="space-between" mb={3}>
-        <Text fontWeight="bold">Network Health</Text>
-        {isDemo && <Badge colorScheme="purple" variant="subtle">Demo</Badge>}
+        <Text fontWeight="bold" color="pink.100">Network Health</Text>
+        <Badge colorScheme="orange" variant="subtle">No Live Data</Badge>
       </HStack>
 
       <VStack align="stretch" spacing={3}>
         <Box>
           <HStack justify="space-between" mb={1}>
-            <Text fontSize="sm">TON Network</Text>
-            <Badge colorScheme="green">Healthy</Badge>
+            <Text fontSize="sm" color="gray.300">TON Network</Text>
+            {statusBadge}
           </HStack>
-          <Progress value={95} colorScheme="green" size="sm" borderRadius="full" />
+          <Progress value={0} colorScheme="gray" size="sm" borderRadius="full" bg="gray.700" />
         </Box>
 
         <Box>
           <HStack justify="space-between" mb={1}>
-            <Text fontSize="sm">DeDust</Text>
-            <Badge colorScheme="green">Online</Badge>
+            <Text fontSize="sm" color="gray.300">DeDust</Text>
+            {statusBadge}
           </HStack>
-          <Progress value={100} colorScheme="green" size="sm" borderRadius="full" />
+          <Progress value={0} colorScheme="gray" size="sm" borderRadius="full" bg="gray.700" />
         </Box>
 
         <Box>
           <HStack justify="space-between" mb={1}>
-            <Text fontSize="sm">STON.fi</Text>
-            <Badge colorScheme="green">Online</Badge>
+            <Text fontSize="sm" color="gray.300">STON.fi</Text>
+            {statusBadge}
           </HStack>
-          <Progress value={98} colorScheme="green" size="sm" borderRadius="full" />
+          <Progress value={0} colorScheme="gray" size="sm" borderRadius="full" bg="gray.700" />
         </Box>
 
-        <Divider />
+        <Divider borderColor="gray.600" />
 
         <HStack justify="space-between">
           <Text fontSize="sm" color="gray.500">
             Gas Price
           </Text>
-          <Text fontSize="sm" fontWeight="bold">
-            {isDemo ? "~0.05 TON" : "0.05 TON"}
+          <Text fontSize="sm" color="gray.500">
+            ---
           </Text>
         </HStack>
 
@@ -381,10 +388,14 @@ function NetworkHealth({ isDemo }: { isDemo?: boolean }) {
           <Text fontSize="sm" color="gray.500">
             Block Height
           </Text>
-          <Text fontSize="sm" fontWeight="bold">
-            {isDemo ? "#42,156,789" : "#---"}
+          <Text fontSize="sm" color="gray.500">
+            ---
           </Text>
         </HStack>
+
+        <Text fontSize="xs" color="gray.600" fontStyle="italic" mt={2}>
+          Health monitoring not yet implemented
+        </Text>
       </VStack>
     </Box>
   );
@@ -409,7 +420,7 @@ export function BlockchainState({
   return (
     <Box>
       <HStack justify="space-between" mb={4}>
-        <Text fontWeight="bold" fontSize="lg">
+        <Text fontWeight="bold" fontSize="lg" color="pink.200">
           Blockchain State
         </Text>
         {isDemo && (
@@ -420,10 +431,10 @@ export function BlockchainState({
       </HStack>
 
       {isDemo && (
-        <Alert status="info" mb={4} borderRadius="md">
-          <AlertIcon />
-          <AlertDescription fontSize="sm">
-            Showing demo data. Connect a wallet via MCP server for real blockchain state.
+        <Alert status="warning" mb={4} borderRadius="md" bg="rgba(236, 153, 72, 0.1)">
+          <AlertIcon color="orange.400" />
+          <AlertDescription fontSize="sm" color="gray.300">
+            All data below is simulated. Real blockchain integration requires the MCP server with wallet tools.
           </AlertDescription>
         </Alert>
       )}

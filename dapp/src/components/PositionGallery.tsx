@@ -17,31 +17,31 @@ interface Position {
   category: "solo" | "duet" | "group" | "crypto" | "healing";
   description: string;
   agents: number;
-  status: "available" | "running" | "completed";
+  status: "demo" | "running" | "completed";
 }
 
 const POSITIONS: Position[] = [
   // Solo
-  { name: "The Contemplator", category: "solo", description: "Deep-dive into blockchain data", agents: 1, status: "available" },
-  { name: "The Wanderer", category: "solo", description: "Explore for opportunities", agents: 1, status: "available" },
+  { name: "The Contemplator", category: "solo", description: "Deep-dive into blockchain data", agents: 1, status: "demo" },
+  { name: "The Wanderer", category: "solo", description: "Explore for opportunities", agents: 1, status: "demo" },
   // Duet
-  { name: "The Mirror", category: "duet", description: "Mutual verification", agents: 2, status: "available" },
-  { name: "The Relay", category: "duet", description: "Sequential handoff", agents: 2, status: "available" },
-  { name: "The Dance", category: "duet", description: "Negotiation pattern", agents: 2, status: "available" },
-  { name: "The Embrace", category: "duet", description: "Shared wallet custody", agents: 2, status: "available" },
+  { name: "The Mirror", category: "duet", description: "Mutual verification", agents: 2, status: "demo" },
+  { name: "The Relay", category: "duet", description: "Sequential handoff", agents: 2, status: "demo" },
+  { name: "The Dance", category: "duet", description: "Negotiation pattern", agents: 2, status: "demo" },
+  { name: "The Embrace", category: "duet", description: "Shared wallet custody", agents: 2, status: "demo" },
   // Group
-  { name: "The Circle", category: "group", description: "Round-robin consensus", agents: 3, status: "available" },
-  { name: "The Pyramid", category: "group", description: "Hierarchical coordination", agents: 4, status: "available" },
-  { name: "The Swarm", category: "group", description: "Parallel scanning", agents: 5, status: "available" },
-  { name: "The Tantric", category: "group", description: "Deliberate consensus", agents: 3, status: "available" },
+  { name: "The Circle", category: "group", description: "Round-robin consensus", agents: 3, status: "demo" },
+  { name: "The Pyramid", category: "group", description: "Hierarchical coordination", agents: 4, status: "demo" },
+  { name: "The Swarm", category: "group", description: "Parallel scanning", agents: 5, status: "demo" },
+  { name: "The Tantric", category: "group", description: "Deliberate consensus", agents: 3, status: "demo" },
   // Crypto
-  { name: "The Arbitrageur", category: "crypto", description: "Cross-DEX arbitrage", agents: 2, status: "available" },
-  { name: "The Oracle Choir", category: "crypto", description: "Aggregated price feeds", agents: 3, status: "available" },
-  { name: "The Liquidity Lotus", category: "crypto", description: "LP management", agents: 2, status: "available" },
-  { name: "The DAO Dance", category: "crypto", description: "Coordinated governance", agents: 3, status: "available" },
+  { name: "The Arbitrageur", category: "crypto", description: "Cross-DEX arbitrage", agents: 2, status: "demo" },
+  { name: "The Oracle Choir", category: "crypto", description: "Aggregated price feeds", agents: 3, status: "demo" },
+  { name: "The Liquidity Lotus", category: "crypto", description: "LP management", agents: 2, status: "demo" },
+  { name: "The DAO Dance", category: "crypto", description: "Coordinated governance", agents: 3, status: "demo" },
   // Healing
-  { name: "Pattern Doctor", category: "healing", description: "Diagnose broken patterns", agents: 1, status: "available" },
-  { name: "Recovery", category: "healing", description: "Graceful failure handling", agents: 1, status: "available" },
+  { name: "Pattern Doctor", category: "healing", description: "Diagnose broken patterns", agents: 1, status: "demo" },
+  { name: "Recovery", category: "healing", description: "Graceful failure handling", agents: 1, status: "demo" },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -66,33 +66,42 @@ interface PositionCardProps {
 }
 
 function PositionCard({ position, onSelect }: PositionCardProps) {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-
   return (
     <Card
-      bg={bgColor}
+      bg="rgba(30, 15, 25, 0.7)"
       borderWidth="1px"
-      borderColor={borderColor}
-      borderRadius="lg"
+      borderColor="rgba(236, 72, 153, 0.2)"
+      borderRadius="xl"
       cursor="pointer"
-      transition="all 0.2s"
-      _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+      transition="all 0.3s ease"
+      backdropFilter="blur(10px)"
+      _hover={{
+        transform: "translateY(-4px)",
+        boxShadow: "0 8px 30px rgba(236, 72, 153, 0.2)",
+        borderColor: "rgba(236, 72, 153, 0.5)",
+        bg: "rgba(40, 20, 35, 0.8)",
+      }}
       onClick={() => onSelect(position)}
     >
       <CardHeader pb={2}>
         <HStack justify="space-between">
           <HStack>
             <Text fontSize="xl">{categoryEmoji[position.category]}</Text>
-            <Heading size="sm">{position.name}</Heading>
+            <Heading size="sm" color="pink.100" fontWeight="500">
+              {position.name}
+            </Heading>
           </HStack>
-          <Badge colorScheme={categoryColors[position.category]}>
+          <Badge
+            colorScheme={categoryColors[position.category]}
+            variant="subtle"
+            fontSize="xs"
+          >
             {position.category}
           </Badge>
         </HStack>
       </CardHeader>
       <CardBody pt={0}>
-        <Text fontSize="sm" color="gray.600" mb={2}>
+        <Text fontSize="sm" color="gray.400" mb={2}>
           {position.description}
         </Text>
         <HStack justify="space-between">
@@ -105,11 +114,12 @@ function PositionCard({ position, onSelect }: PositionCardProps) {
                 ? "green"
                 : position.status === "completed"
                 ? "blue"
-                : "gray"
+                : "orange"
             }
-            variant="subtle"
+            variant="outline"
+            fontSize="xs"
           >
-            {position.status}
+            {position.status === "demo" ? "demo only" : position.status}
           </Badge>
         </HStack>
       </CardBody>
@@ -131,11 +141,17 @@ export function PositionGallery({ onPositionSelect, filter }: PositionGalleryPro
 
   return (
     <Box>
-      <Heading size="lg" mb={6} textAlign="center">
+      <Heading
+        size="lg"
+        mb={4}
+        textAlign="center"
+        fontFamily="'Playfair Display', Georgia, serif"
+        color="pink.200"
+      >
         Position Gallery
       </Heading>
-      <Text textAlign="center" color="gray.600" mb={8}>
-        Select a position to observe agent collaboration in action
+      <Text textAlign="center" color="gray.500" mb={8} fontStyle="italic">
+        Agent collaboration patterns (demo mode - real execution not yet implemented)
       </Text>
 
       {categories.map((category) => {
@@ -148,10 +164,10 @@ export function PositionGallery({ onPositionSelect, filter }: PositionGalleryPro
           <Box key={category} mb={8}>
             <HStack mb={4}>
               <Text fontSize="2xl">{categoryEmoji[category]}</Text>
-              <Heading size="md" textTransform="capitalize">
+              <Heading size="md" textTransform="capitalize" color="gray.200">
                 {category} Positions
               </Heading>
-              <Badge colorScheme={categoryColors[category]}>
+              <Badge colorScheme={categoryColors[category]} variant="subtle">
                 {categoryPositions.length}
               </Badge>
             </HStack>
