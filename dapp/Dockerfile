@@ -2,16 +2,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json yarn.lock* package-lock.json* ./
+# Copy just the dapp package files
+COPY dapp/package.json dapp/package-lock.json* ./
 
 # Install dependencies
 RUN npm install
 
-# Copy source
-COPY . .
+# Copy dapp source
+COPY dapp/ ./
 
-# Build
+# Build the dapp
 RUN npm run build
 
 # Production stage
