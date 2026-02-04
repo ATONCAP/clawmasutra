@@ -142,12 +142,28 @@ export async function handleTonWalletTool(
       const mnemonic = args?.mnemonic as string;
       const network = (args?.network as Network) || "testnet";
 
-      const mnemonicArray = mnemonic.split(" ");
-      if (mnemonicArray.length !== 24) {
-        return err("Invalid mnemonic: must be 24 words");
+      if (!mnemonic || typeof mnemonic !== "string") {
+        return err("Invalid mnemonic: must be a string");
       }
 
-      const keyPair = await mnemonicToPrivateKey(mnemonicArray);
+      const mnemonicArray = mnemonic.trim().toLowerCase().split(/\s+/);
+      if (mnemonicArray.length !== 24) {
+        return err(`Invalid mnemonic: must be 24 words (got ${mnemonicArray.length})`);
+      }
+
+      // Basic validation: words should be lowercase alphabetic
+      const invalidWords = mnemonicArray.filter(w => !/^[a-z]+$/.test(w));
+      if (invalidWords.length > 0) {
+        return err(`Invalid mnemonic: words must be lowercase letters only. Invalid: ${invalidWords.slice(0, 3).join(", ")}${invalidWords.length > 3 ? "..." : ""}`);
+      }
+
+      // mnemonicToPrivateKey will throw if words aren't valid BIP39
+      let keyPair: KeyPair;
+      try {
+        keyPair = await mnemonicToPrivateKey(mnemonicArray);
+      } catch (e) {
+        return err(`Invalid mnemonic: ${e instanceof Error ? e.message : "not a valid BIP39 phrase"}`);
+      }
       const wallet = WalletContractV4.create({ publicKey: keyPair.publicKey, workchain: 0 });
       const client = new TonClient({ endpoint: ENDPOINTS[network] });
 
@@ -256,7 +272,13 @@ export async function handleTonWalletTool(
 
       await new Promise(resolve => setTimeout(resolve, 2000));
       let newSeqno = seqno;
-      try { newSeqno = await contract.getSeqno(); } catch { /* keep seqno */ }
+      let seqnoCheckError: string | undefined;
+      try {
+        newSeqno = await contract.getSeqno();
+      } catch (e) {
+        seqnoCheckError = e instanceof Error ? e.message : String(e);
+        console.error("Failed to check new seqno:", seqnoCheckError);
+      }
 
       const confirmed = newSeqno > seqno;
       return ok({
@@ -264,6 +286,7 @@ export async function handleTonWalletTool(
         status: confirmed ? "confirmed" : "pending",
         ...txInfo,
         newSeqno,
+        ...(seqnoCheckError && { _seqnoCheckError: seqnoCheckError }),
         _note: confirmed
           ? "Transaction confirmed (seqno increased)"
           : "Transaction submitted but not yet confirmed. Check balance in a few seconds.",

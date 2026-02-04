@@ -1,5 +1,4 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { ChildProcess } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -39,7 +38,7 @@ interface SessionState {
   startedAt: Date;
   agents: string[];
   status: "initializing" | "running" | "completed" | "error";
-  processes: ChildProcess[];
+  processIds: number[];  // PIDs for any spawned processes (future use)
   isDemoMode: boolean;
   config: Record<string, unknown>;
 }
@@ -203,7 +202,7 @@ export async function handlePositionTool(
         startedAt: new Date(),
         agents: [],
         status: "initializing",
-        processes: [],
+        processIds: [],
         isDemoMode: runInDemoMode,
         config,
       };
@@ -271,7 +270,10 @@ export async function handlePositionTool(
       const session = activeSessions.get(sessionId);
       if (!session) return err(`No session found with ID: ${sessionId}`);
 
-      session.processes.forEach(proc => { try { proc.kill(); } catch { /* already exited */ } });
+      // Kill any real processes by PID (future: when OpenClaw integration is added)
+      for (const pid of session.processIds) {
+        try { process.kill(pid); } catch { /* already exited */ }
+      }
       session.status = "completed";
 
       return ok({

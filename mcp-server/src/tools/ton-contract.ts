@@ -2,17 +2,15 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { TonClient } from "@ton/ton";
 import { Address, Cell } from "@ton/core";
 
-const MAINNET_ENDPOINT = "https://toncenter.com/api/v2/jsonRPC";
-const TESTNET_ENDPOINT = "https://testnet.toncenter.com/api/v2/jsonRPC";
+const ENDPOINTS = {
+  mainnet: "https://toncenter.com/api/v2/jsonRPC",
+  testnet: "https://testnet.toncenter.com/api/v2/jsonRPC",
+} as const;
 
-interface ContractClientState {
-  client: TonClient;
-  network: "mainnet" | "testnet";
-}
+type Network = "mainnet" | "testnet";
 
-function getClient(network: "mainnet" | "testnet" = "testnet"): TonClient {
-  const endpoint = network === "mainnet" ? MAINNET_ENDPOINT : TESTNET_ENDPOINT;
-  return new TonClient({ endpoint });
+function getClient(network: Network = "testnet"): TonClient {
+  return new TonClient({ endpoint: ENDPOINTS[network] });
 }
 
 export const tonContractTools: Tool[] = [
