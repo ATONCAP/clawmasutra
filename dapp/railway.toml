@@ -1,9 +1,8 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "yarn install && yarn build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "yarn start"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
